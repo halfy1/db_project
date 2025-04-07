@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёты по разработке</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .report-card {
+            transition: all 0.3s ease;
+        }
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .dark .report-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .project-toggle {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .project-toggle:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        .dark .project-toggle:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        .project-toggle.active {
+            background-color: rgba(79, 70, 229, 0.2);
+            border-left: 3px solid #4f46e5;
+        }
+        .dark .project-toggle.active {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-left: 3px solid #6366f1;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+        .metric-card {
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-10 relative">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">📊 Отчёты по разработке</h1>
+                    <p class="text-gray-600 dark:text-gray-300">Аналитика текущих проектов и работы команды</p>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-yellow-300">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row gap-6 mb-8">
+            <!-- Навигация по отчётам -->
+            <div class="md:w-1/4">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 sticky top-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Меню отчётов</h2>
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <button onclick="showTab('current-projects')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium flex items-center">
+                                    <i class="fas fa-tasks mr-3"></i> Текущие разработки
+                                </button>
+                            </li>
+                            <li>
+                                <button onclick="showTab('employee-history')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium flex items-center">
+                                    <i class="fas fa-user-clock mr-3"></i> История сотрудников
+                                </button>
+                            </li>
+                            <li>
+                                <button onclick="showTab('quality-metrics')" class="w-full text-left px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium flex items-center">
+                                    <i class="fas fa-chart-line mr-3"></i> Качество разработки
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Контент отчётов -->
+            <div class="md:w-3/4">
+                <!-- Отчёт 3: Качество разработки (переработанный) -->
+                <div id="quality-metrics" class="tab-content active">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-8">
+                        <div class="p-6 bg-gradient-to-r from-indigo-500 to-indigo-600">
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-2xl font-bold text-white">📈 Качество разработки</h2>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">Детальная аналитика</span>
+                            </div>
+                            <p class="text-indigo-100 dark:text-indigo-200 mt-2">Статистика багов, код-ревью и скорости исправления по проектам</p>
+                        </div>
+                        
+                        <div class="p-6">
+                            <!-- Статистика сверху -->
+                            <div class="grid-container mb-8">
+                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Всего проектов</h3>
+                                        <div class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 p-2 rounded-lg">
+                                            <i class="fas fa-project-diagram"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">12</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">включая 4 активных</p>
+                                </div>
+                                
+                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Средний баг-рейт</h3>
+                                        <div class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 p-2 rounded-lg">
+                                            <i class="fas fa-bug"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-2">0.42</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">багов/человеко-день</p>
+                                </div>
+                                
+                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Фактор исправлений</h3>
+                                        <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-2 rounded-lg">
+                                            <i class="fas fa-check-double"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">82%</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">багов закрыто в срок</p>
+                                </div>
+                            </div>
+
+                            <!-- Фильтры проектов -->
+                            <div class="mb-6">
+                                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Фильтровать проекты:</h3>
+                                <div class="flex flex-wrap gap-3">
+                                    <button id="filter-all" class="project-toggle active px-4 py-2 rounded-lg bg-indigo-600 dark:bg-indigo-700 text-white" 
+                                            onclick="filterProjects('all')">
+                                        <i class="fas fa-layer-group mr-2"></i>Все проекты
+                                    </button>
+                                    <button id="filter-crm" class="project-toggle px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                                            onclick="filterProjects('crm')">
+                                        <i class="fas fa-users mr-2"></i>Обновление CRM
+                                    </button>
+                                    <button id="filter-mobile" class="project-toggle px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                                            onclick="filterProjects('mobile')">
+                                        <i class="fas fa-mobile-alt mr-2"></i>Мобильное приложение
+                                    </button>
+                                    <button id="filter-portal" class="project-toggle px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                                            onclick="filterProjects('portal')">
+                                        <i class="fas fa-laptop mr-2"></i>Портал клиентов
+                                    </button>
+                                    <button id="filter-auto" class="project-toggle px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                                            onclick="filterProjects('auto')">
+                                        <i class="fas fa-robot mr-2"></i>Автоматизация
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Графики -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                                <!-- Основной график -->
+                                <div class="report-card bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 col-span-2">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Динамика багов по месяцам</h3>
+                                    <div class="chart-container">
+                                        <canvas id="mainChart"></canvas>
+                                    </div>
+                                    <div id="mainChartLegend" class="flex flex-wrap justify-center mt-4 gap-4"></div>
+                                </div>
+                                
+                                <!-- Дополнительные графики -->
+                                <div class="report-card bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Типы багов</h3>
+                                    <div class="chart-container">
+                                        <canvas id="bugTypesChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="report-card bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Скорость исправления</h3>
+                                    <div class="chart-container">
+                                        <canvas id="fixSpeedChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Таблица с детализацией -->
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Детали по проектам</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                                    <thead class="bg-gray-100 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Проект</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Баг-рейт</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Ревью</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Критические</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Среднее время</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Статус</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tr id="row-crm" class="project-row hover:bg-gray-50 dark:hover:bg-gray-700" data-project="crm">
+                                            <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800 dark:text-white">Обновление CRM</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">0.62</span></td>
+                                            <td class="px-4 py-3 whitespace-nowrap">74%</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">12</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">3.2 дн</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Средний</span></td>
+                                        </tr>
+                                        <tr id="row-mobile" class="project-row hover:bg-gray-50 dark:hover:bg-gray-700" data-project="mobile">
+                                            <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800 dark:text-white">Мобильное приложение</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">0.53</span></td>
+                                            <td class="px-4 py-3 whitespace-nowrap">68%</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">8</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">4.1 дн</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Средний</span></td>
+                                        </tr>
+                                        <tr id="row-portal" class="project-row hover:bg-gray-50 dark:hover:bg-gray-700" data-project="portal">
+                                            <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800 dark:text-white">Портал клиентов</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">0.28</span></td>
+                                            <td class="px-4 py-3 whitespace-nowrap">92%</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">3</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">1.8 дн</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Высокий</span></td>
+                                        </tr>
+                                        <tr id="row-auto" class="project-row hover:bg-gray-50 dark:hover:bg-gray-700" data-project="auto">
+                                            <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800 dark:text-white">Автоматизация</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">0.35</span></td>
+                                            <td class="px-4 py-3 whitespace-nowrap">85%</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">5</td>
+                                            <td class="px-4 py-3 whitespace-nowrap">2.5 дн</td>
+                                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Высокий</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Состояние фильтрации
+        let currentFilter = 'all';
+        const activeProjects = new Set(['crm', 'mobile', 'portal', 'auto']);
+        
+        // Переключение между вкладками
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            
+            // Обновить стили кнопок навигации
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-200');
+                btn.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            
+            // Если переключаемся на вкладку качества, инициализируем графики
+            if (tabId === 'quality-metrics' && !window.mainChart) {
+                initCharts();
+            }
+        }
+
+        // Настройки проектов
+        const projects = {
+            'crm': {
+                name: 'Обновление CRM',
+                color: '#FF6384',
+                icon: 'users'
+            },
+            'mobile': {
+                name: 'Мобильное приложение',
+                color: '#36A2EB',
+                icon: 'mobile-alt'
+            },
+            'portal': {
+                name: 'Портал клиентов',
+                color: '#4BC0C0',
+                icon: 'laptop'
+            },
+            'auto': {
+                name: 'Автоматизация',
+                color: '#FFCE56',
+                icon: 'robot'
+            }
+        };
+
+        // Инициализация всех графиков
+        function initCharts() {
+            createMainChart();
+            createBugTypesChart();
+            createFixSpeedChart();
+        }
+
+        // Создание основного графика
+        function createMainChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'];
+            
+            // Генерация случайных данных для каждого проекта
+            const datasets = Object.entries(projects).map(([projectId, project]) => {
+                const data = Array(months.length).fill(0).map(() => 
+                    Math.floor(Math.random() * 30) + 10
+                );
+                
+                return {
+                    id: projectId,
+                    label: project.name,
+                    data: data,
+                    borderColor: project.color,
+                    backgroundColor: `${project.color}40`,
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: !activeProjects.has(projectId)
+                };
+            });
+
+            // Текст для темной/светлой темы
+            const textColor = document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151';
+            const gridColor = document.documentElement.classList.contains('dark') ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)';
+            
+            window.mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Создаем кастомную легенду
+            updateLegend();
+        }
+
+        // Создаем легенду для основного графика
+        function updateLegend() {
+            const legendContainer = document.getElementById('mainChartLegend');
+            legendContainer.innerHTML = '';
+            
+            window.mainChart.data.datasets.forEach((dataset) => {
+                const projectId = dataset.id;
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.style.opacity = dataset.hidden ? '0.5' : '1';
+                legendItem.onclick = () => {
+                    // Находим индекс набора данных для проекта
+                    const datasetIndex = window.mainChart.data.datasets.findIndex(d => d.id === projectId);
+                    if (datasetIndex !== -1) {
+                        const meta = window.mainChart.getDatasetMeta(datasetIndex);
+                        meta.hidden = !meta.hidden;
+                        
+                        // Обновляем состояние активных проектов
+                        if (meta.hidden) {
+                            activeProjects.delete(projectId);
+                        } else {
+                            activeProjects.add(projectId);
+                        }
+                        
+                        // Обновляем стиль кнопки фильтра
+                        updateFilterButtonState();
+                        
+                        window.mainChart.update();
+                        updateLegend();
+                    }
+                };
+                
+                legendItem.innerHTML = `
+                    <span class="legend-color" style="background-color: ${dataset.borderColor}"></span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">${dataset.label}</span>
+                `;
+                
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // Обновление состояния кнопок фильтра
+        function updateFilterButtonState() {
+            const allProjects = Object.keys(projects);
+            
+            // Проверяем, все ли проекты активны
+            const allActive = allProjects.every(projectId => activeProjects.has(projectId));
+            
+            // Обновляем кнопку "Все проекты"
+            const allBtn = document.getElementById('filter-all');
+            if (allActive) {
+                allBtn.classList.remove('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                allBtn.classList.add('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+            } else {
+                allBtn.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                allBtn.classList.add('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            }
+            
+            // Обновляем кнопки для каждого проекта
+            allProjects.forEach(projectId => {
+                const btn = document.getElementById(`filter-${projectId}`);
+                const isActive = activeProjects.has(projectId);
+                
+                if (isActive && currentFilter === projectId) {
+                    btn.classList.remove('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                    btn.classList.add('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                } else if (isActive) {
+                    btn.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                    btn.classList.add('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                } else {
+                    btn.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                    btn.classList.add('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                    btn.style.opacity = '0.5';
+                }
+            });
+        }
+
+        // График типов багов
+        function createBugTypesChart() {
+            const ctx = document.getElementById('bugTypesChart').getContext('2d');
+            const types = ['UI/UX', 'Функциональные', 'Серверные', 'Безопасность', 'Производительность'];
+            
+            window.bugTypesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: types,
+                    datasets: [{
+                        data: types.map(() => Math.floor(Math.random() * 20) + 5),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // График скорости исправления
+        function createFixSpeedChart() {
+            const ctx = document.getElementById('fixSpeedChart').getContext('2d');
+            const days = ['<1 дня', '1-2 дня', '3-5 дней', '6-10 дней', '>10 дней'];
+            
+            window.fixSpeedChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Баги',
+                        data: days.map(() => Math.floor(Math.random() * 30) + 5),
+                        backgroundColor: days.map((_, i) => 
+                            `hsl(${i * 60 + 240}, 70%, 60%)`
+                        ),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: document.documentElement.classList.contains('dark') ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)'
+                            },
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Фильтрация проектов
+        function filterProjects(projectId) {
+            currentFilter = projectId;
+            
+            // Сбросить все кнопки
+            const filterButtons = document.querySelectorAll('.project-toggle');
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                btn.classList.add('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                btn.style.opacity = '';
+            });
+            
+            // Активировать выбранную кнопку
+            const activeBtn = document.getElementById(`filter-${projectId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+                activeBtn.classList.remove('border', 'border-gray-300', 'dark:border-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            }
+            
+            // Обновить activeProjects в зависимости от выбранного фильтра
+            if (projectId === 'all') {
+                // Показать все проекты
+                Object.keys(projects).forEach(id => activeProjects.add(id));
+            } else {
+                // Показать только выбранный проект
+                activeProjects.clear();
+                activeProjects.add(projectId);
+            }
+            
+            // Обновить график если он существует
+            if (window.mainChart) {
+                window.mainChart.data.datasets.forEach(dataset => {
+                    const meta = window.mainChart.getDatasetMeta(
+                        window.mainChart.data.datasets.findIndex(d => d.id === dataset.id)
+                    );
+                    meta.hidden = !activeProjects.has(dataset.id);
+                });
+                window.mainChart.update();
+                updateLegend();
+            }
+            
+            // Обновить видимость строк таблицы
+            document.querySelectorAll('.project-row').forEach(row => {
+                const rowProjectId = row.dataset.project;
+                if (projectId === 'all' || activeProjects.has(rowProjectId)) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        // Переключение темы
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            localStorage.setItem('darkMode', html.classList.contains('dark'));
+            
+            // Обновить иконку
+            const themeIcon = document.getElementById('themeToggle');
+            if (html.classList.contains('dark')) {
+                themeIcon.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                themeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+            
+            // Перерисовать графики если они есть
+            if (window.mainChart) {
+                window.mainChart.destroy();
+                window.bugTypesChart.destroy();
+                window.fixSpeedChart.destroy();
+                initCharts();
+            }
+        }
+
+        // Проверка темы при загрузке
+        function checkTheme() {
+            const darkMode = localStorage.getItem('darkMode') === 'true' || 
+                            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            checkTheme();
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Инициализация графиков если открыта вкладка качества
+            if (document.getElementById('quality-metrics').classList.contains('active')) {
+                initCharts();
+            }
+        });
+    </script>
+</body>
+</html>
