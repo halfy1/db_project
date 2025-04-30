@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.db.models import Count
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
@@ -48,14 +49,50 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'email', 'position', 'date_employment', 'is_active')
+    list_display = ('last_name', 'first_name', 'email', 'position', 'date_employment', 'is_active', 'bugs_made_count')
     list_filter = ('position',)
     search_fields = ('last_name', 'first_name', 'email')
     ordering = ('last_name', 'first_name')
+    actions = ['send_firing_email']
 
     @admin.display(boolean=True)
     def is_active(self, obj):
         return obj.date_dismissal is None
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(
+            bugs_made=Count('created_features__bugs', distinct=True)
+        )
+
+    @admin.display(ordering='bugs_made', description='Багов допущено')
+    def bugs_made_count(self, obj):
+        return obj.bugs_made
+    bugs_made_count.short_description = 'Допущено багов'
+
+    @admin.action(description='Отправить письмо об увольнении сотрудникам с >2 багами')
+    def send_firing_email(self, request, queryset):
+        fired = 0
+        for employee in queryset:
+            bug_count = getattr(employee, 'bug_count', None)
+            if bug_count is None:
+                # если вдруг не пришло из аннотации
+                bug_count = employee.created_features.aggregate(cnt=Count('bugs'))['cnt']
+            if bug_count > 2 and employee.email:
+                send_mail(
+                    subject='Уведомление об увольнении',
+                    message=(
+                        f"Уважаемый(ая) {employee.first_name} {employee.last_name},\n\n"
+                        f"К сожалению, вы допустили {bug_count} багов в разработанных функциях. "
+                        "В связи с этим, мы вынуждены прекратить с вами сотрудничество.\n\n"
+                        "С уважением,\nОтдел кадров."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[employee.email],
+                    fail_silently=False,
+                )
+                fired += 1
+        self.message_user(request, f"Отправлено {fired} писем об увольнении.")
 
 
 @admin.register(ProjectManagement)

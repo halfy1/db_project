@@ -8,6 +8,7 @@
 .dark .report-card:hover {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
+
 .tab-content {
     display: none;
 }
@@ -15,16 +16,19 @@
     display: block;
     animation: fadeIn 0.5s;
 }
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
 .badge {
     padding: 3px 8px;
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
 }
+
 .dev-badge {
     background-color: #EFF6FF;
     color: #1D4ED8;
@@ -33,6 +37,7 @@
     background-color: #1E3A8A;
     color: #DBEAFE;
 }
+
 .qa-badge {
     background-color: #ECFDF5;
     color: #047857;
@@ -41,12 +46,14 @@
     background-color: #064E3B;
     color: #D1FAE5;
 }
+
 .theme-toggle {
     transition: all 0.3s ease;
 }
 .theme-toggle:hover {
     transform: rotate(30deg);
 }
+
 .dark .bg-gradient-to-r.from-blue-500.to-blue-600 {
     background: linear-gradient(to right, #1e40af, #1e3a8a);
 }
@@ -56,6 +63,7 @@
 .dark .bg-gradient-to-r.from-indigo-500.to-indigo-600 {
     background: linear-gradient(to right, #4338ca, #3730a3);
 }
+
 .project-toggle {
     cursor: pointer;
     transition: all 0.2s;
@@ -74,15 +82,18 @@
     background-color: rgba(99, 102, 241, 0.2);
     border-left: 3px solid #6366f1;
 }
+
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1rem;
 }
+
 .chart-container {
     position: relative;
     height: 300px;
 }
+
 .legend-item {
     display: flex;
     align-items: center;
@@ -94,18 +105,21 @@
     margin-right: 8px;
     border-radius: 3px;
 }
+
 .metric-card {
     transition: transform 0.3s ease;
 }
 .metric-card:hover {
     transform: scale(1.03);
 }
+
 .search-input {
     transition: all 0.3s ease;
 }
 .search-input:focus {
     box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.5);
 }
+
 .employee-card {
     transition: all 0.3s ease;
 }

@@ -206,7 +206,8 @@ class Feature(models.Model):
 
 def default_deadline():
     return timezone.now() + timedelta(days=7)
-
+def two_days_ago():
+    return timezone.now() - timedelta(days=2)
 
 class Bug(models.Model):
     CATEGORY_CHOICES = [
@@ -255,7 +256,7 @@ class Bug(models.Model):
         verbose_name="Кто сообщил"
     )
     reported_at = models.DateTimeField(
-        auto_now_add=True,
+        default=two_days_ago,
         verbose_name="Дата сообщения"
     )
     assigned_to = models.ForeignKey(
@@ -297,8 +298,10 @@ class Bug(models.Model):
         return self.deadline < timezone.now() and not self.fixed_at
 
     def clean(self):
-        if self.fixed_at and self.fixed_at < self.reported_at:
-            raise ValidationError("Дата исправления не может быть раньше даты сообщения")
+        super().clean()
+        if self.fixed_at and self.reported_at:
+            if self.fixed_at < self.reported_at:
+                raise ValidationError("Дата исправления не может быть раньше даты создания.")
 
     def __str__(self):
         return f"{self.get_category_display()} ({self.get_priority_display()}): {self.description[:50]}"

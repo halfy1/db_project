@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -186,116 +187,58 @@
                         <div class="p-6 bg-gradient-to-r from-blue-500 to-blue-600">
                             <div class="flex justify-between items-center">
                                 <h2 class="text-2xl font-bold text-white">📌 Текущие разработки</h2>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">Активные проекты</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">
+                                    Активных проектов: {{ metrics.total_active_projects }}
+                                </span>
                             </div>
                             <p class="text-blue-100 dark:text-blue-200 mt-2">Проекты, которые ещё не завершены и команды, работающие над ними</p>
                         </div>
 
                         <div class="p-6">
-                            <div class="flex justify-between items-center mb-6">
-                                <div class="flex items-center">
-                                    <span class="mr-2 text-gray-500 dark:text-gray-400">Фильтр</span>
-                                    <select class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option>Все проекты</option>
-                                        <option>Высокий приоритет</option>
-                                        <option>Средний приоритет</option>
-                                        <option>Низкий приоритет</option>
-                                    </select>
-                                </div>
-                                <button class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center">
-                                    <i class="fas fa-download mr-2"></i> Экспорт
-                                </button>
-                            </div>
-
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead class="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Проект</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Дата начала</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Команда</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Прогресс</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Проект</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Дата начала</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Команда</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Баг-трекер</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {% for project in active_projects %}
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="font-medium text-gray-900 dark:text-white">Обновление CRM системы</div>
-                                                <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-045</div>
+                                                <div class="font-medium text-gray-900 dark:text-white">{{ project.name }}</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                    Приоритет: {{ project.get_priority_display }}
+                                                </div>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">15.03.2023</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {{ project.date_start|date:"d.m.Y" }}
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex flex-wrap gap-2">
-                                                    <span class="badge dev-badge"><i class="fas fa-code mr-1"></i> Иван Петров</span>
-                                                    <span class="badge dev-badge"><i class="fas fa-code mr-1"></i> Мария Сидорова</span>
-                                                    <span class="badge qa-badge"><i class="fas fa-vial mr-1"></i> Алексей Иванов</span>
+                                                    {% for member in project.current_members %}
+                                                        <span class="badge {% if member.role == 'developer' %}dev-badge{% else %}qa-badge{% endif %}">
+                                                            <i class="fas fa-{% if member.role == 'developer' %}code{% else %}vial{% endif %} mr-1"></i>
+                                                            {{ member.user.last_name }} {{ member.user.first_name|first }}.
+                                                        </span>
+                                                    {% endfor %}
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mr-2">
-                                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 65%"></div>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">65%</span>
-                                                </div>
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                    {% if project.bug_count > 10 %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200
+                                                    {% elif project.bug_count > 5 %}bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
+                                                    {% else %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200{% endif %}">
+                                                    {{ project.bug_count }} багов
+                                                </span>
                                             </td>
                                         </tr>
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="font-medium text-gray-900 dark:text-white">Мобильное приложение</div>
-                                                <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-052</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">01.05.2023</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex flex-wrap gap-2">
-                                                    <span class="badge dev-badge"><i class="fas fa-code mr-1"></i> Сергей Кузнецов</span>
-                                                    <span class="badge dev-badge"><i class="fas fa-code mr-1"></i> Анна Смирнова</span>
-                                                    <span class="badge qa-badge"><i class="fas fa-vial mr-1"></i> Дмитрий Фёдоров</span>
-                                                    <span class="badge qa-badge"><i class="fas fa-vial mr-1"></i> Елена Васильева</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mr-2">
-                                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 30%"></div>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">30%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="font-medium text-gray-900 dark:text-white">Интеграция с платежной системой</div>
-                                                <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-058</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">10.06.2023</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex flex-wrap gap-2">
-                                                    <span class="badge dev-badge"><i class="fas fa-code mr-1"></i> Ольга Николаева</span>
-                                                    <span class="badge qa-badge"><i class="fas fa-vial mr-1"></i> Алексей Иванов</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 mr-2">
-                                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">45%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        {% endfor %}
                                     </tbody>
                                 </table>
-                            </div>
-
-                            <div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                                <div>Показано 3 из 5 активных проектов</div>
-                                <div class="flex space-x-2">
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Назад</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 font-medium">1</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Вперёд</button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -306,256 +249,81 @@
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-8">
                         <div class="p-6 bg-gradient-to-r from-purple-500 to-purple-600">
                             <div class="flex justify-between items-center">
-                                <h2 class="text-2xl font-bold text-white">👨‍💻 История участия сотрудников</h2>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">Команда</span>
+                                <h2 class="text-2xl font-bold text-white">👨‍💻 История сотрудников</h2>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">
+                                    Активных сотрудников: {{ metrics.total_active_employees }}
+                                </span>
                             </div>
-                            <p class="text-purple-100 dark:text-purple-200 mt-2">Проекты, в которых участвовал каждый сотрудник, упорядоченные по дате</p>
+                            <p class="text-purple-100 dark:text-purple-200 mt-2">Проекты, в которых участвовал каждый сотрудник</p>
                         </div>
 
                         <div class="p-6">
                             <div class="mb-6">
-                                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                                    <div class="w-full md:w-1/2">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Выберите сотрудника</label>
-                                        <select id="employeeSelect" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                            <option value="all">Все сотрудники</option>
-                                            <option value="ivan">Иван Петров</option>
-                                            <option value="maria">Мария Сидорова</option>
-                                            <option value="alexey">Алексей Иванов</option>
-                                            <option value="sergey">Сергей Кузнецов</option>
-                                            <option value="anna">Анна Смирнова</option>
-                                            <option value="dmitry">Дмитрий Фёдоров</option>
-                                            <option value="elena">Елена Васильева</option>
-                                            <option value="olga">Ольга Николаева</option>
-                                        </select>
-                                    </div>
-                                    <div class="w-full md:w-1/2">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Поиск по имени</label>
-                                        <div class="relative">
-                                            <input id="employeeSearch" type="text" placeholder="Введите имя сотрудника..." class="search-input w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                            <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                                                <i class="fas fa-search"></i>
-                                            </div>
-                                        </div>
+                                <div class="relative">
+                                    <input id="employeeSearch" type="text" placeholder="Поиск по имени сотрудника..."
+                                           class="search-input w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                                        <i class="fas fa-search"></i>
                                     </div>
                                 </div>
                             </div>
+
+                            <ul id="searchResults" class="mt-2 space-y-1 text-sm text-gray-700 dark:text-white"></ul>
 
                             <div id="employeesContainer" class="space-y-6">
-                                <!-- Карточка сотрудника 1 -->
-                                <div class="employee-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm" data-name="Иван Петров" data-position="senior" data-status="active" data-id="ivan">
+                                {% for employee in employees %}
+                                <div class="employee-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm"
+                                     data-name="{{ employee.last_name }} {{ employee.first_name }}">
                                     <div class="flex items-start justify-between mb-4">
                                         <div>
-                                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Иван Петров</h3>
-                                            <p class="text-gray-600 dark:text-gray-300">Senior Backend Developer</p>
+                                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">
+                                                {{ employee.last_name }} {{ employee.first_name }}
+                                            </h3>
+                                            <p class="text-gray-600 dark:text-gray-300">
+                                                {{ employee.get_position_display }}
+                                            </p>
                                         </div>
                                         <div class="flex items-center">
-                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-medium px-2.5 py-0.5 rounded">Активен</span>
+                                            <span class="{% if employee.date_dismissal %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200{% else %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200{% endif %} text-xs font-medium px-2.5 py-0.5 rounded">
+                                                {% if employee.date_dismissal %}Уволен{% else %}Активен{% endif %}
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                         <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                                            <i class="fas fa-project-diagram mr-2 text-purple-500"></i> Участие в проектах
+                                            <i class="fas fa-project-diagram mr-2 text-purple-500"></i>
+                                            Участие в проектах ({{ employee.active_projects_count }} активных)
                                         </h4>
 
                                         <div class="space-y-4">
+                                            {% for participation in employee.current_projects %}
                                             <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
                                                 <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Обновление CRM системы</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">15.03.2023 - текущий</span>
+                                                    <h5 class="font-medium text-gray-800 dark:text-white">{{ participation.project.name }}</h5>
+                                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                        с {{ participation.date_in|date:"d.m.Y" }}
+                                                        {% if participation.date_out %}
+                                                        по {{ participation.date_out|date:"d.m.Y" }}
+                                                        {% endif %}
+                                                    </span>
                                                 </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка нового функционала для CRM системы</p>
+                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                                    Роль: {{ participation.get_role_display }}
+                                                </p>
                                                 <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Backend</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">API</span>
+                                                    <span class="text-xs px-2 py-1
+                                                        {% if participation.role == 'developer' %}bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200
+                                                        {% else %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200{% endif %} rounded-full">
+                                                        {{ participation.get_role_display }}
+                                                    </span>
                                                 </div>
                                             </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Портал для клиентов</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">10.01.2023 - 28.02.2023</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Создание личного кабинета для клиентов компании</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Backend</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">База данных</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Автоматизация отчетов</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">15.11.2022 - 30.12.2022</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка системы автоматической генерации отчетов</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Backend</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Интеграция</span>
-                                                </div>
-                                            </div>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Карточка сотрудника 2 -->
-                                <div class="employee-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm" data-name="Алексей Иванов" data-position="qa" data-status="active" data-id="alexey">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Алексей Иванов</h3>
-                                            <p class="text-gray-600 dark:text-gray-300">QA Engineer</p>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-medium px-2.5 py-0.5 rounded">Активен</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                                            <i class="fas fa-project-diagram mr-2 text-purple-500"></i> Участие в проектах
-                                        </h4>
-
-                                        <div class="space-y-4">
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Обновление CRM системы</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">15.03.2023 - текущий</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Тестирование нового функционала CRM системы</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Ручное тестирование</span>
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Тест-кейсы</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Интеграция с платежной системой</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">10.06.2023 - текущий</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Тестирование интеграции с внешними платежными системами</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Автотесты</span>
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Безопасность</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Мобильное приложение</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">01.05.2023 - текущий</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Тестирование мобильного приложения на iOS и Android</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">UI тестирование</span>
-                                                    <span class="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Кросс-платформенное</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Карточка сотрудника 3 -->
-                                <div class="employee-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm" data-name="Мария Сидорова" data-position="dev" data-status="active" data-id="maria">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Мария Сидорова</h3>
-                                            <p class="text-gray-600 dark:text-gray-300">Frontend Developer</p>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-medium px-2.5 py-0.5 rounded">Активен</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                                            <i class="fas fa-project-diagram mr-2 text-purple-500"></i> Участие в проектах
-                                        </h4>
-
-                                        <div class="space-y-4">
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Обновление CRM системы</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">15.03.2023 - текущий</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка интерфейса для нового функционала CRM</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">React</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">UI/UX</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Портал для клиентов</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">10.01.2023 - 28.02.2023</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка интерфейса личного кабинета</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Vue.js</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Адаптивный дизайн</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Карточка сотрудника 4 -->
-                                <div class="employee-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm" data-name="Сергей Кузнецов" data-position="dev" data-status="active" data-id="sergey">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Сергей Кузнецов</h3>
-                                            <p class="text-gray-600 dark:text-gray-300">Mobile Developer</p>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-medium px-2.5 py-0.5 rounded">Активен</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                                            <i class="fas fa-project-diagram mr-2 text-purple-500"></i> Участие в проектах
-                                        </h4>
-
-                                        <div class="space-y-4">
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Мобильное приложение</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">01.05.2023 - текущий</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка мобильного приложения для iOS</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Swift</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">iOS</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="pl-6 border-l-2 border-purple-200 dark:border-purple-800">
-                                                <div class="flex justify-between">
-                                                    <h5 class="font-medium text-gray-800 dark:text-white">Приложение для сотрудников</h5>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">10.02.2023 - 30.04.2023</span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Разработка внутреннего приложения для сотрудников</p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Flutter</span>
-                                                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Кросс-платформенное</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                                <div>Показано 4 из 8 сотрудников</div>
-                                <div class="flex space-x-2">
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Назад</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 font-medium">1</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">3</button>
-                                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Вперёд</button>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -567,129 +335,147 @@
                         <div class="p-6 bg-gradient-to-r from-indigo-500 to-indigo-600">
                             <div class="flex justify-between items-center">
                                 <h2 class="text-2xl font-bold text-white">📈 Качество разработки</h2>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">Детальная аналитика</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-white text-sm font-medium">
+                                    Открытых багов: {{ metrics.open_bugs_count }}
+                                </span>
                             </div>
-                            <p class="text-indigo-100 dark:text-indigo-200 mt-2">Статистика багов, код-ревью и скорости исправления по проектам</p>
+                            <p class="text-indigo-100 dark:text-indigo-200 mt-2">Статистика багов и скорости их исправления</p>
                         </div>
 
                         <div class="p-6">
                             <!-- Статистика сверху -->
-                            <div class="grid-container mb-8">
-                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="metric-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-lg font-medium text-gray-800 dark:text-white">Всего проектов</h3>
                                         <div class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 p-2 rounded-lg">
                                             <i class="fas fa-project-diagram"></i>
                                         </div>
                                     </div>
-                                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">12</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">включая 4 активных</p>
+                                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
+                                        {{ metrics.total_active_projects }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">включая {{ active_projects|length }} активных</p>
                                 </div>
 
-                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                <div class="metric-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Средний баг-рейт</h3>
+                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Открытых багов</h3>
                                         <div class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 p-2 rounded-lg">
                                             <i class="fas fa-bug"></i>
                                         </div>
                                     </div>
-                                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-2">0.42</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">багов/человеко-день</p>
+                                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-2">
+                                        {{ metrics.open_bugs_count }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">из них {{ bugs|length }} в отчете</p>
                                 </div>
 
-                                <div class="metric-card report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                <div class="metric-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Фактор исправлений</h3>
+                                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Активных сотрудников</h3>
                                         <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-2 rounded-lg">
-                                            <i class="fas fa-check-double"></i>
+                                            <i class="fas fa-users"></i>
                                         </div>
                                     </div>
-                                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">82%</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">багов закрыто в срок</p>
+                                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                                        {{ metrics.total_active_employees }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">из них {{ employees|length }} в отчете</p>
                                 </div>
                             </div>
-
-                            <!-- Фильтры проектов -->
-                            <div class="mb-6">
-                                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Фильтровать проекты</h3>
-                                <div class="flex flex-wrap gap-3">
-                                    <button id="filter-all" class="project-toggle active px-4 py-2 rounded-lg bg-indigo-600 dark:bg-indigo-700 text-white">Все проекты</button>
-                                    <button id="filter-high" class="project-toggle px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Высокий приоритет</button>
-                                    <button id="filter-medium" class="project-toggle px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Средний приоритет</button>
-                                    <button id="filter-low" class="project-toggle px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Низкий приоритет</button>
-                                </div>
-                            </div>
-
                             <!-- Графики -->
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                                <!-- График 1 -->
-                                <div class="report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
-                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Статистика багов по проектам</h3>
-                                    <div class="chart-container">
-                                        <canvas id="bugsChart"></canvas>
+                                <!-- Основной график -->
+                                <div class="report-card bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 col-span-2">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Динамика багов по месяцам</h3>
+                                    <div class="chart-container" style="position: relative; height: 300px;">
+                                        <canvas id="mainChart"></canvas>
+                                    </div>
+                                    <div id="mainChartLegend" class="flex flex-wrap justify-center mt-4 gap-4"></div>
+                                </div>
+
+                                <div class="report-card bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 col-span-2">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Скорость исправления</h3>
+                                    <div class="chart-container" style="position: relative; height: 300px;">
+                                        <canvas id="fixSpeedChart"></canvas>
                                     </div>
                                 </div>
 
-                                <!-- График 2 -->
-                                <div class="report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
-                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Скорость исправления багов (дни)</h3>
-                                    <div class="chart-container">
-                                        <canvas id="fixTimeChart"></canvas>
-                                    </div>
-                                </div>
+                            </div>
                             </div>
 
-                            <!-- Таблица с детализацией -->
-                            <div class="report-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
-                                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Детализация по проектам</h3>
+                            <!-- Таблица багов -->
+                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Последние баги</h3>
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead class="bg-gray-50 dark:bg-gray-700">
                                             <tr>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Проект</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Всего багов</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Критические</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Среднее время исправления</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% исправленных</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Проект</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Фича</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Описание</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Приоритет</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Статус</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Срок</th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            {% for bug in bugs %}
                                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="font-medium text-gray-900 dark:text-white">Обновление CRM системы</div>
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-045</div>
+                                                    <div class="font-medium text-gray-900 dark:text-white">{{ bug.project.name }}</div>
+                                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                        {{ bug.reported_at|date:"d.m.Y H:i" }}
+                                                    </div>
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">42</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">5</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2.3 дня</td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">78%</span>
+                                                    <div class="text-sm text-gray-900 dark:text-gray-300">
+                                                        {{ bug.feature.name|truncatechars:30 }}
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="text-sm text-gray-900 dark:text-gray-300">
+                                                        {{ bug.description|truncatechars:50 }}
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                        {% if bug.priority == 'critical' %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200
+                                                        {% elif bug.priority == 'high' %}bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200
+                                                        {% else %}bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200{% endif %}">
+                                                        {{ bug.get_priority_display }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    {% if bug.fixed_at %}
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                        Исправлен
+                                                    </span>
+                                                    {% elif bug.is_overdue %}
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                                                        Просрочен
+                                                    </span>
+                                                    {% else %}
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
+                                                        В работе
+                                                    </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    {{ bug.deadline|date:"d.m.Y" }}
+                                                    {% if bug.is_overdue %}
+                                                    <div class="text-xs text-red-500">+{{ bug.deadline|timesince:timezone.now }}</div>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
-                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="font-medium text-gray-900 dark:text-white">Мобильное приложение</div>
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-052</div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">28</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">1.7 дня</td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">85%</span>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                    Нет багов для отображения
                                                 </td>
                                             </tr>
-                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="font-medium text-gray-900 dark:text-white">Интеграция с платежной системой</div>
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400">#PRJ-2023-058</div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">15</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">1</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">3.1 дня</td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">65%</span>
-                                                </td>
-                                            </tr>
+                                            {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
@@ -701,223 +487,261 @@
         </div>
     </div>
 
-    <script>
-        // Переключение темы
-        const themeToggle = document.getElementById('themeToggle');
+<script>
+    // Инициализация переменных для графиков
+    let bugsChart = null;
+    let fixTimeChart = null;
+    let qualityChart = null;
+
+    // Проверка сохраненной темы
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+
+    // Переключение темы
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+            renderCharts();
+        });
+    }
+
+    // Переключение между вкладками
+    function showTab(tabId) {
+        // Скрыть все вкладки
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
         });
 
-        // Проверка сохраненной темы
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.documentElement.classList.add('dark');
+        // Показать выбранную вкладку
+        const activeTab = document.getElementById(tabId);
+        if (activeTab) {
+            activeTab.classList.add('active');
         }
 
-        // Переключение между вкладками
-        function showTab(tabId) {
-            // Скрыть все вкладки
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+        // Обновить активную кнопку в меню
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-50', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-200');
+            btn.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+        });
 
-            // Показать выбранную вкладку
-            document.getElementById(tabId).classList.add('active');
-
-            // Обновить активную кнопку в меню
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-50', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-200');
-                btn.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-            });
-
-            // Сделать активную кнопку выделенной
-            document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`).classList.add('bg-blue-50', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-200');
-            document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`).classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-
-            // Если это вкладка с графиками, перерисовать их
-            if (tabId === 'quality-metrics') {
-                setTimeout(renderCharts, 100);
-            }
+        // Сделать активную кнопку выделенной
+        const activeBtn = document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-blue-50', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-200');
+            activeBtn.classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
         }
 
-        // Фильтрация сотрудников
-        const employeeSelect = document.getElementById('employeeSelect');
-        const employeeSearch = document.getElementById('employeeSearch');
+        // Если это вкладка с графиками, перерисовать их
+        if (tabId === 'quality-metrics') {
+            setTimeout(renderCharts, 100);
+        }
+    }
 
+    // Фильтрация сотрудников
+    const employeeSelect = document.getElementById('employeeSelect');
+    const employeeSearch = document.getElementById('employeeSearch');
+
+    if (employeeSelect && employeeSearch) {
         employeeSelect.addEventListener('change', filterEmployees);
         employeeSearch.addEventListener('input', filterEmployees);
+    }
 
-        function filterEmployees() {
-            const selectedId = employeeSelect.value;
-            const searchTerm = employeeSearch.value.toLowerCase();
+    function filterEmployees() {
+        const selectedId = employeeSelect ? employeeSelect.value : 'all';
+        const searchTerm = employeeSearch ? employeeSearch.value.toLowerCase() : '';
 
-            document.querySelectorAll('.employee-card').forEach(card => {
-                const name = card.dataset.name.toLowerCase();
-                const id = card.dataset.id;
+        document.querySelectorAll('.employee-card').forEach(card => {
+            const name = card.dataset.name ? card.dataset.name.toLowerCase() : '';
+            const id = card.dataset.id || '';
 
-                const matchesSearch = name.includes(searchTerm);
-                const matchesSelect = selectedId === 'all' || id === selectedId;
+            const matchesSearch = name.includes(searchTerm);
+            const matchesSelect = selectedId === 'all' || id === selectedId;
 
-                if (matchesSearch && matchesSelect) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        }
-
-        // Фильтрация проектов в разделе качества
-        document.querySelectorAll('.project-toggle').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.project-toggle').forEach(b => b.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white'));
-                this.classList.add('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
-
-                // Здесь должна быть логика фильтрации данных для графиков
-                // В демонстрационных целях просто перерисовываем графики
-                renderCharts();
-            });
+            if (matchesSearch && matchesSelect) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
         });
+    }
 
-        // Инициализация графиков
-        let bugsChart, fixTimeChart;
+    // Фильтрация проектов в разделе качества
+    document.querySelectorAll('.project-toggle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.project-toggle').forEach(b => {
+                b.classList.remove('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+            });
+            this.classList.add('active', 'bg-indigo-600', 'dark:bg-indigo-700', 'text-white');
+            renderCharts();
+        });
+    });
 
-        function renderCharts() {
+    // Общие настройки для графиков
+    function getChartOptions(yAxisTitle) {
+        const isDark = document.documentElement.classList.contains('dark');
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: isDark ? '#374151' : '#E5E7EB',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: isDark ? '#D1D5DB' : '#6B7280'
+                    },
+                    title: {
+                        display: true,
+                        text: yAxisTitle,
+                        color: isDark ? '#D1D5DB' : '#6B7280'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: isDark ? '#D1D5DB' : '#6B7280'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: isDark ? '#D1D5DB' : '#6B7280',
+                        boxWidth: 12,
+                        padding: 20,
+                        font: {
+                            size: 13
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+                    titleColor: isDark ? '#E5E7EB' : '#111827',
+                    bodyColor: isDark ? '#D1D5DB' : '#6B7280',
+                    borderColor: '#9CA3AF',
+                    borderWidth: 1,
+                    padding: 12,
+                    usePointStyle: true
+                }
+            }
+        };
+    }
+
+    function renderCharts() {
+        try {
+            // Проверяем существование canvas элементов
+            const bugsCanvas = document.getElementById('mainChart');
+            const fixTimeCanvas = document.getElementById('fixSpeedChart');
+
+            if (!bugsCanvas || !fixTimeCanvas) {
+                console.warn('Canvas elements not found for charts');
+                return;
+            }
+
             // Уничтожаем старые графики, если они есть
             if (bugsChart) bugsChart.destroy();
             if (fixTimeChart) fixTimeChart.destroy();
 
-            // Данные для демонстрации
-            const projects = ['CRM система', 'Мобильное приложение', 'Платежная система'];
-            const bugsData = [42, 28, 15];
-            const criticalBugsData = [5, 2, 1];
-            const fixTimeData = [2.3, 1.7, 3.1];
+            // Получаем данные из Django template
+            const chartData = {
+                projects: {{ chart_data.projects|safe }},
+                total_bugs: {{ chart_data.total_bugs|safe }},
+                open_bugs: {{ chart_data.open_bugs|safe }},
+                avg_fix_days: {{ chart_data.avg_fix_days|safe }},
+                quality_scores: {{ chart_data.quality_scores|safe }}
+            };
+
+            // Проверяем, есть ли данные для отображения
+            if (chartData.projects.length === 0) {
+                console.warn('No chart data available');
+                return;
+            }
 
             // График 1: Статистика багов
-            const bugsCtx = document.getElementById('bugsChart').getContext('2d');
-            bugsChart = new Chart(bugsCtx, {
+            bugsChart = new Chart(bugsCanvas, {
                 type: 'bar',
                 data: {
-                    labels: projects,
+                    labels: chartData.projects,
                     datasets: [
                         {
                             label: 'Все баги',
-                            data: bugsData,
+                            data: chartData.total_bugs,
                             backgroundColor: '#6366F1',
                             borderColor: '#4F46E5',
                             borderWidth: 1
                         },
                         {
-                            label: 'Критические баги',
-                            data: criticalBugsData,
+                            label: 'Открытые баги',
+                            data: chartData.open_bugs,
                             backgroundColor: '#EC4899',
                             borderColor: '#DB2777',
                             borderWidth: 1
                         }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#E5E7EB',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#6B7280'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#6B7280'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#6B7280',
-                                boxWidth: 12,
-                                padding: 20
-                            }
-                        }
-                    }
-                }
+                options: getChartOptions('Количество багов')
             });
 
             // График 2: Время исправления багов
-            const fixTimeCtx = document.getElementById('fixTimeChart').getContext('2d');
-            fixTimeChart = new Chart(fixTimeCtx, {
+            fixTimeChart = new Chart(fixTimeCanvas, {
                 type: 'line',
                 data: {
-                    labels: projects,
+                    labels: chartData.projects,
                     datasets: [{
                         label: 'Среднее время исправления (дни)',
-                        data: fixTimeData,
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        borderColor: '#6366F1',
+                        data: chartData.avg_fix_days,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#10B981',
                         borderWidth: 2,
                         tension: 0.3,
                         fill: true,
                         pointBackgroundColor: '#FFFFFF',
-                        pointBorderColor: '#6366F1',
+                        pointBorderColor: '#10B981',
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         pointHoverRadius: 6
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#E5E7EB',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#6B7280'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#6B7280'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#6B7280',
-                                boxWidth: 12,
-                                padding: 20
-                            }
-                        }
-                    }
-                }
+                options: getChartOptions('Дни')
             });
+        } catch (error) {
+            console.error('Error rendering charts:', error);
         }
+    }
 
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            // Показать первую вкладку
-            showTab('current-projects');
+    // Обработчик изменения размера окна
+    const resizeHandler = () => {
+        if (bugsChart || fixTimeChart) {
+            renderCharts();
+        }
+    };
+    window.addEventListener('resize', resizeHandler);
 
-            // Инициализировать графики (они будут отрисованы при переходе на вкладку)
-        });
-    </script>
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Показать первую вкладку
+        showTab('current-projects');
+
+        // Если сразу открыта вкладка с графиками
+        if (document.getElementById('quality-metrics')?.classList.contains('active')) {
+            setTimeout(renderCharts, 100);
+        }
+    });
+
+    // Очистка при размонтировании (если нужно)
+    window.addEventListener('beforeunload', () => {
+        window.removeEventListener('resize', resizeHandler);
+    });
+</script>
+
 </body>
 </html>
